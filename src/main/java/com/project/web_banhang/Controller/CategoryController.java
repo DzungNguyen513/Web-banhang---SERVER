@@ -1,12 +1,17 @@
 package com.project.web_banhang.Controller;
 
+import com.project.web_banhang.Components.LocalizationUtils;
 import com.project.web_banhang.DTOS.CategoryDTO;
 import com.project.web_banhang.Model.Category;
+import com.project.web_banhang.Responses.CategoryResponse;
+import com.project.web_banhang.Responses.UpdateCategoryResponse;
 import com.project.web_banhang.Service.CategoryService;
 import com.project.web_banhang.Service.ICategoryService;
+import com.project.web_banhang.Utils.MessageKeys;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -20,39 +25,48 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final LocalizationUtils localizationUtils;
+
+
     @GetMapping("")
     public ResponseEntity<?> getAllCategories(@RequestParam("page") int page, @RequestParam("limit") int limit) {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
     @PostMapping("")
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryDTO categoryDTO, BindingResult result) {
-        try {
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryDTO categoryDTO, BindingResult result) {
+            CategoryResponse categoryResponse = new CategoryResponse();
             if(result.hasErrors()){
                 List<String> errMessages = result.getFieldErrors()
                         .stream()
                         .map(FieldError::getDefaultMessage)
                         .toList();
-                return ResponseEntity.badRequest().body(errMessages);
+                categoryResponse.setMessage(localizationUtils.getLocalizeMessage(MessageKeys.INSERT_CATEGORY_FAILED));
+                categoryResponse.setErrors(errMessages);
+                return ResponseEntity.badRequest().body(categoryResponse);
             }
-            categoryService.createCategory(categoryDTO);
-            return ResponseEntity.ok("Create category successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        Category category = categoryService.createCategory(categoryDTO);
+        categoryResponse.setCategory(category);
+        return ResponseEntity.ok(categoryResponse);
     }
 
+
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<UpdateCategoryResponse> updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryDTO categoryDTO
+    ) {
+        UpdateCategoryResponse updateCategoryResponse = new UpdateCategoryResponse();
         categoryService.updateCategory(id, categoryDTO);
-        return ResponseEntity.ok("Update category successfully");
+        updateCategoryResponse.setMessage(localizationUtils.getLocalizeMessage(MessageKeys.UPDATE_CATEGORY_SUCCESSFULLY));
+        return ResponseEntity.ok(updateCategoryResponse);
     }
 
     @DeleteMapping("/{}")
     public ResponseEntity<?> deleteCategory(@Valid @PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok("Delete category with id: " + id +" successfully");
-    }
+        return ResponseEntity.ok(localizationUtils.getLocalizeMessage(MessageKeys.DELETE_CATEGORY_SUCCESSFULLY));    }
 
 
 }

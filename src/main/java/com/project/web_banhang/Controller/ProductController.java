@@ -1,6 +1,7 @@
 package com.project.web_banhang.Controller;
 
 import com.github.javafaker.Faker;
+import com.project.web_banhang.Components.LocalizationUtils;
 import com.project.web_banhang.DTOS.CategoryDTO;
 import com.project.web_banhang.DTOS.ProductDTO;
 import com.project.web_banhang.DTOS.ProductImageDTO;
@@ -10,10 +11,12 @@ import com.project.web_banhang.Model.ProductImage;
 import com.project.web_banhang.Responses.ProductListResponse;
 import com.project.web_banhang.Responses.ProductResponse;
 import com.project.web_banhang.Service.IProductService;
+import com.project.web_banhang.Utils.MessageKeys;
 import jakarta.validation.Path;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.util.StringUtil;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -43,6 +46,8 @@ import java.util.UUID;
 public class ProductController {
 
     private final IProductService productService;
+    private final LocalizationUtils localizationUtils;
+
 
     @GetMapping("")
     public ResponseEntity<ProductListResponse> getAllProducts(@RequestParam("page") int page, @RequestParam("limit") int limit) {
@@ -91,7 +96,8 @@ public class ProductController {
             Product existtingProduct = productService.getProductById(id);
             files = files == null ? new ArrayList<MultipartFile>() : files;
             if(files.size() > ProductImage.MAXIMUM_IMAGES_PER_PRODUCT) {
-                return ResponseEntity.badRequest().body("You can only upload maximum 5 images");
+                return ResponseEntity.badRequest().body(localizationUtils
+                        .getLocalizeMessage(MessageKeys.UPLOAD_IMAGES_MAX_5));
             }
             List<ProductImage> productImages = new ArrayList<>();
             for (MultipartFile file : files) {
@@ -99,11 +105,14 @@ public class ProductController {
                     continue;
                 }
                 if(file.getSize() > 10 * 1024 * 1024) {
-                    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body("File is too large! Maximum size is 10MB");
+                    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                            .body(localizationUtils
+                                    .getLocalizeMessage(MessageKeys.UPLOAD_IMAGES_FILE_LARGE));
                 }
                 String contentType = file.getContentType();
                 if(contentType == null || !contentType.startsWith("image/")) {
-                    return  ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body("File must be an image");
+                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                            .body(localizationUtils.getLocalizeMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
                 }
                 //lưu file và cập nhật thumbnail trong DTO
                 String fileName = storageFile(file);
@@ -143,6 +152,23 @@ public class ProductController {
         String contentType = file.getContentType();
         return contentType != null && contentType.startsWith("image/");
     }
+    @GetMapping("/images/{imageName}")
+    public ResponseEntity<?> viewImage(@PathVariable String imageName) {
+        try {
+            java.nio.file.Path imagePath = Paths.get("uploads/"+imageName);
+            UrlResource resource = new UrlResource(imagePath.toUri());
+
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long productId, @RequestBody ProductDTO productDTO) {
         try {
@@ -154,7 +180,7 @@ public class ProductController {
 
     }
 
-    @DeleteMapping("/id")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long productId) {
         try {
                 productService.deleteProduct(productId);

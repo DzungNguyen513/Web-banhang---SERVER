@@ -1,6 +1,6 @@
 package com.project.web_banhang.Service;
 
-import com.project.web_banhang.Components.JwtTokenUtil;
+import com.project.web_banhang.Components.JwtTokenUtils;
 import com.project.web_banhang.DTOS.UserDTO;
 import com.project.web_banhang.Exceptions.DataNotFoundException;
 import com.project.web_banhang.Exceptions.PermissionDenyException;
@@ -28,7 +28,7 @@ public class UserService implements IUserService{
 
     private final PasswordEncoder passwordEncoder;
 
-    private final JwtTokenUtil jwtTokenUtil;
+    private final JwtTokenUtils jwtTokenUtil;
 
     private final AuthenticationManager authenticationManager;
 

@@ -1,7 +1,6 @@
 package com.project.web_banhang.Components;
 
 import com.project.web_banhang.Exceptions.InvalidParamException;
-import com.project.web_banhang.Model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -22,7 +21,7 @@ import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
-public class JwtTokenUtil {
+public class JwtTokenUtils {
     @Value("${jwt.expiration}")
     private int expiration;
     @Value("${jwt.secretKey}")
@@ -84,4 +83,6 @@ public class JwtTokenUtil {
         String phoneNumber = extractPhoneNumber(token);
         return (phoneNumber.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.project.web_banhang.Controller;
 
+import com.project.web_banhang.Components.LocalizationUtils;
 import com.project.web_banhang.DTOS.OrderDTO;
 import com.project.web_banhang.DTOS.OrderDetailDTO;
 import com.project.web_banhang.Exceptions.DataNotFoundException;
@@ -7,6 +8,7 @@ import com.project.web_banhang.Model.OrderDetail;
 import com.project.web_banhang.Responses.OrderDetailResponse;
 import com.project.web_banhang.Service.IOrderDetailService;
 import com.project.web_banhang.Service.OrderDetailService;
+import com.project.web_banhang.Utils.MessageKeys;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ import java.util.List;
 public class OrderDetailController {
 
     private final IOrderDetailService orderDetailService;
+    private final LocalizationUtils localizationUtils;
+
 
     @PostMapping("")
     public ResponseEntity<?> createOrderDetail (@Valid @RequestBody OrderDetailDTO orderDetailDTO) {
@@ -58,7 +62,7 @@ public class OrderDetailController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrderDetail(@Valid @PathVariable("id") long id) {
         orderDetailService.deleteOrderDetail(id);
-        return ResponseEntity.ok().body("Delete orderDetail successfully with id:  " + id);
+        return ResponseEntity.ok().body(localizationUtils.getLocalizeMessage(MessageKeys.DELETE_ORDER_DETAIL_SUCCESSFULLY));
 
 
     }

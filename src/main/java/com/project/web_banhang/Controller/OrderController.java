@@ -1,8 +1,10 @@
 package com.project.web_banhang.Controller;
 
+import com.project.web_banhang.Components.LocalizationUtils;
 import com.project.web_banhang.DTOS.OrderDTO;
 import com.project.web_banhang.Model.Order;
 import com.project.web_banhang.Service.IOrderService;
+import com.project.web_banhang.Utils.MessageKeys;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import java.util.List;
 public class OrderController {
 
     private final IOrderService orderService;
+    private final LocalizationUtils localizationUtils;
+
     @PostMapping("")
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTO, BindingResult result) {
         try {
@@ -38,7 +42,7 @@ public class OrderController {
     public ResponseEntity<?> getOrdersByUserId(@Valid @PathVariable("user_id") long userId) {
         try {
             List<Order> orders = orderService.getAllOrder(userId);
-            return ResponseEntity.ok("Get orders list form user_id");
+            return ResponseEntity.ok(orders);
         }
         catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -49,7 +53,7 @@ public class OrderController {
     public ResponseEntity<?> getOrdersByOrderId(@Valid @PathVariable("user_id") long orderId) {
         try {
             Order existingOrder = orderService.getOrderById(orderId);
-            return ResponseEntity.ok("Get orders list form user_id");
+            return ResponseEntity.ok(existingOrder);
         }
         catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -61,7 +65,7 @@ public class OrderController {
 
         try {
             Order order = orderService.updateOrder(id, orderDTO);
-            return ResponseEntity.ok("Order updated successfully");
+            return ResponseEntity.ok(order);
         }
         catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -69,9 +73,9 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    public  ResponseEntity<?> deleteOrder(@Valid @PathVariable long id) {
+    public  ResponseEntity<String> deleteOrder(@Valid @PathVariable long id) {
         orderService.deleteOrder(id);
-        return ResponseEntity.ok("Deleted updated successfully");
+        return ResponseEntity.ok(localizationUtils.getLocalizeMessage(MessageKeys.DELETE_ORDER_SUCCESSFULLY));
     }
 
 }
