@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Getter
@@ -38,7 +39,7 @@ public class OrderDTO {
     @JsonProperty("total_money")
     @Min(value = 0, message = "Total money must be > 0")
 
-    private Float totalMoney;
+    private int totalMoney;
 
     @JsonProperty("shipping_method")
     private String shippingMethod;
@@ -51,5 +52,8 @@ public class OrderDTO {
 
     @JsonProperty("payment_method")
     private String paymentMethod;
+
+    @JsonProperty("cart_items")
+    private List<CartItemDTO> cartItems;
 
 }

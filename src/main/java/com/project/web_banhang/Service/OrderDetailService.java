@@ -8,6 +8,7 @@ import com.project.web_banhang.Model.Product;
 import com.project.web_banhang.Repository.OrderDetailRepository;
 import com.project.web_banhang.Repository.OrderRepository;
 import com.project.web_banhang.Repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +65,7 @@ public class OrderDetailService implements IOrderDetailService{
     }
 
     @Override
+    @Transactional
     public void deleteOrderDetail(Long id) {
         orderDetailRepository.deleteById(id);
     }

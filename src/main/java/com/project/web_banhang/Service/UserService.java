@@ -1,6 +1,7 @@
 package com.project.web_banhang.Service;
 
 import com.project.web_banhang.Components.JwtTokenUtils;
+import com.project.web_banhang.Components.LocalizationUtils;
 import com.project.web_banhang.DTOS.UserDTO;
 import com.project.web_banhang.Exceptions.DataNotFoundException;
 import com.project.web_banhang.Exceptions.PermissionDenyException;
@@ -8,6 +9,7 @@ import com.project.web_banhang.Model.Role;
 import com.project.web_banhang.Model.User;
 import com.project.web_banhang.Repository.RoleRepository;
 import com.project.web_banhang.Repository.UserRepository;
+import com.project.web_banhang.Utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +33,9 @@ public class UserService implements IUserService{
     private final JwtTokenUtils jwtTokenUtil;
 
     private final AuthenticationManager authenticationManager;
+
+    private final LocalizationUtils localizationUtils;
+
 
     @Override
     public User createUser(UserDTO userDTO) throws Exception {
@@ -64,20 +69,48 @@ public class UserService implements IUserService{
     }
 
     @Override
-    public String login(String phoneNumber, String password) throws Exception {
+    public String login(String phoneNumber, String password, Long roleId) throws Exception {
         Optional<User> optionalUser = userRepository.findByPhoneNumber(phoneNumber);
-        if(optionalUser.isEmpty()){
-            throw new DataNotFoundException("Invalid phoneNumber / password");
+        if(optionalUser.isEmpty()) {
+            throw new DataNotFoundException(localizationUtils.getLocalizeMessage(MessageKeys.WRONG_PHONE_PASSWORD));
         }
+        //return optionalUser.get();//muốn trả JWT token ?
         User existingUser = optionalUser.get();
-        if(existingUser.getFacebookAccountId() == 0 && existingUser.getGoogleAccountId() == 0) {
+        //check password
+        if (existingUser.getFacebookAccountId() == 0
+                && existingUser.getGoogleAccountId() == 0) {
             if(!passwordEncoder.matches(password, existingUser.getPassword())) {
-                throw new BadCredentialsException("Wrong phone number or password");
+                throw new BadCredentialsException(localizationUtils.getLocalizeMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
         }
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(phoneNumber, password, existingUser.getAuthorities());
-        //authenticate
+        Optional<Role> optionalRole = roleRepository.findById(roleId);
+        if(optionalRole.isEmpty() || !roleId.equals(existingUser.getRole().getId())) {
+            throw new DataNotFoundException(localizationUtils.getLocalizeMessage(MessageKeys.ROLE_DOES_NOT_EXISTS));
+        }
+        if(!optionalUser.get().isActive()) {
+            throw new DataNotFoundException(localizationUtils.getLocalizeMessage(MessageKeys.USER_IS_LOCKED));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                phoneNumber, password,
+                existingUser.getAuthorities()
+        );
+
+        //authenticate with Java Spring security
         authenticationManager.authenticate(authenticationToken);
         return jwtTokenUtil.generateToken(existingUser);
+    }
+    @Override
+    public User getUserDetailsFromToken(String token) throws Exception {
+        if(jwtTokenUtil.isTokenExpired(token)) {
+            throw new Exception("Token is expired");
+        }
+        String phoneNumber = jwtTokenUtil.extractPhoneNumber(token);
+        Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
+
+        if (user.isPresent()) {
+            return user.get();
+        } else {
+            throw new Exception("User not found");
+        }
     }
 }

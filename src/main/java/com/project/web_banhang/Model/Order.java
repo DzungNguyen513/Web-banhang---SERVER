@@ -1,11 +1,13 @@
 package com.project.web_banhang.Model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -27,8 +29,8 @@ public class Order extends BaseEntity {
     @Column(name = "fullname", length = 100)
     private String fullName;
 
-    @Column(name = "name",length = 150)
-    private String name;
+    @Column(name = "email",length = 150)
+    private String email;
 
     @Column(name = "phone_number", length = 10, nullable = false)
     private String phoneNumber;
@@ -71,9 +73,9 @@ public class Order extends BaseEntity {
     @Column(name = "active")
     private boolean active;
 
-
-
-
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<OrderDetail> orderDetails;
 
 
 }

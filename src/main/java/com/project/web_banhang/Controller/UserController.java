@@ -6,6 +6,7 @@ import com.project.web_banhang.DTOS.UserLoginDTO;
 import com.project.web_banhang.Model.User;
 import com.project.web_banhang.Responses.LoginResponses;
 import com.project.web_banhang.Responses.RegisterResponse;
+import com.project.web_banhang.Responses.UserResponse;
 import com.project.web_banhang.Service.IUserService;
 import com.project.web_banhang.Utils.MessageKeys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,15 +54,26 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponses> login(@Valid @RequestBody UserLoginDTO userLoginDTO, HttpServletRequest request){
+    public ResponseEntity<LoginResponses> login(@Valid @RequestBody UserLoginDTO userLoginDTO){
         try {
-            String token = userService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword());
+            String token = userService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword(), userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId());
             return ResponseEntity.ok(LoginResponses.builder().message(localizationUtils.getLocalizeMessage(MessageKeys.LOGIN_SUCCESSFULLY)).token(token).build());
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
                     LoginResponses.builder().message(localizationUtils.getLocalizeMessage(MessageKeys.LOGIN_FAILED, e.getMessage())).build()
             );
+        }
+    }
+
+    @PostMapping("/details")
+    public ResponseEntity<UserResponse> getUserDetails(@RequestHeader("Authorization") String token) {
+        try {
+            String extractedToken = token.substring(7); // Loại bỏ "Bearer " từ chuỗi token
+            User user = userService.getUserDetailsFromToken(extractedToken);
+            return ResponseEntity.ok(UserResponse.fromUser(user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

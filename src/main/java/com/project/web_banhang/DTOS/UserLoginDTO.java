@@ -1,6 +1,7 @@
 package com.project.web_banhang.DTOS;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -16,10 +17,15 @@ public class UserLoginDTO {
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 
-    private String address;
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    @Min(value = 1, message = "You must enter role's Id")
+    @JsonProperty("role_id")
+    private Long roleId;
+
+
 
 
 }

@@ -3,6 +3,7 @@ package com.project.web_banhang.Controller;
 import com.project.web_banhang.Components.LocalizationUtils;
 import com.project.web_banhang.DTOS.OrderDTO;
 import com.project.web_banhang.Model.Order;
+import com.project.web_banhang.Responses.OrderResponse;
 import com.project.web_banhang.Service.IOrderService;
 import com.project.web_banhang.Utils.MessageKeys;
 import jakarta.validation.Valid;
@@ -50,10 +51,11 @@ public class OrderController {
     }
 
     @GetMapping("/{order_id}")
-    public ResponseEntity<?> getOrdersByOrderId(@Valid @PathVariable("user_id") long orderId) {
+    public ResponseEntity<?> getOrdersByOrderId(@Valid @PathVariable("order_id") long orderId) {
         try {
             Order existingOrder = orderService.getOrderById(orderId);
-            return ResponseEntity.ok(existingOrder);
+            OrderResponse orderResponse = OrderResponse.fromOrder(existingOrder);
+            return ResponseEntity.ok(orderResponse);
         }
         catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
